@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.siasun.pcsweb.mapper.EmsMapper">
+
+	<resultMap id="resultMap" type="EmsInfo">
+		<result column="mail_id" property="mail_id" jdbcType="VARCHAR" />
+		<result column="order_sn" property="order_sn" jdbcType="VARCHAR" />
+		<result column="order_name" property="order_name" jdbcType="VARCHAR" />
+		<result column="order_prop" property="order_prop" jdbcType="VARCHAR" />
+		<result column="weight" property="weight" jdbcType="VARCHAR" />
+		<result column="insure_amount" property="insure_amount" jdbcType="VARCHAR" />
+		<result column="insure_value" property="insure_value" jdbcType="VARCHAR" />
+		<result column="contact_city" property="contact_city" jdbcType="VARCHAR" />
+		<result column="contact_code" property="contact_code" jdbcType="VARCHAR" />
+		<result column="contact_corp" property="contact_corp" jdbcType="VARCHAR" />
+		<result column="contact_name" property="contact_name" jdbcType="VARCHAR" />
+		<result column="contact_addr" property="contact_addr" jdbcType="VARCHAR" />
+		<result column="contact_mobile1" property="contact_mobile1" jdbcType="VARCHAR" />
+		<result column="contact_mobile2" property="contact_mobile2" jdbcType="VARCHAR" />
+		<result column="post_name" property="post_name" jdbcType="VARCHAR" />
+		<result column="post_corp" property="post_corp" jdbcType="VARCHAR" />
+		<result column="post_code" property="post_code" jdbcType="VARCHAR" />
+		<result column="post_mobile1" property="post_mobile1" jdbcType="VARCHAR" />
+		<result column="post_mobile2" property="post_mobile2" jdbcType="VARCHAR" />
+		<result column="post_addr" property="post_addr" jdbcType="VARCHAR" />
+		<result column="extra_amount" property="extra_amount" jdbcType="VARCHAR" />
+		<result column="length" property="length" jdbcType="VARCHAR" />
+		<result column="wide" property="wide" jdbcType="VARCHAR" />
+		<result column="height" property="height" jdbcType="VARCHAR" />
+		<result column="back_mail_id" property="back_mail_id" jdbcType="VARCHAR" />
+		<result column="order_count" property="order_count" jdbcType="VARCHAR" />
+		<result column="eva_time" property="eva_time" jdbcType="VARCHAR" />
+		<result column="shipping_type" property="shipping_type" jdbcType="VARCHAR" />
+		<result column="replace_identity" property="replace_identity" jdbcType="VARCHAR" />
+		<result column="create_time" property="create_time" jdbcType="VARCHAR" />
+		<result column="mail_state" property="mail_state" jdbcType="VARCHAR" />
+	</resultMap>
+
+	<sql id="Base_Column_List">
+	    coalesce(mail_id, '') as mail_id,
+	    coalesce(order_sn, '') as order_sn,
+	    coalesce(order_name, '') as order_name,
+		coalesce(contact_city, '') as contact_city,
+		coalesce(contact_code, '') as contact_code,
+		coalesce(contact_corp, '') as contact_corp,
+		coalesce(contact_name, '') as contact_name,
+		coalesce(contact_addr, '') as contact_addr,
+		coalesce(contact_mobile1, '') as contact_mobile1,
+		coalesce(post_name, '') as post_name,
+		coalesce(post_corp, '') as post_corp,
+		coalesce(post_code, '') as post_code,
+		coalesce(post_mobile1, '') as post_mobile1,
+		coalesce(post_addr, '') as post_addr,
+		to_char(create_time, 'YYYY-MM-DD HH24:MI:SS') as create_time, 
+		f.display_field as mail_state
+	</sql>
+
+	<select id="ListEms" resultMap="resultMap" parameterType="map">
+		select
+			<include refid="Base_Column_List" />
+		from
+			pcs_ems_info t
+		left join
+		(
+			select * from pcs_field
+			where field = 'mailState'
+		) f
+		on 
+			t.mail_state = to_number(f.value_field, '99G999D9S') 
+		<where>
+			1=1
+			<if test="orderSn != null and orderSn != ''">
+				and t.order_sn like '%' || #{orderSn} || '%'
+			</if>
+			<if test="mobile != null and mobile != ''">
+				and t.contact_mobile1 = #{mobile}
+			</if>
+		</where>
+		order by
+			t.create_time desc
+	</select>
+	
+	
+	<select id="ListEmsByDate" resultMap="resultMap" parameterType="string">
+		select
+		    mail_id,
+	        e.order_sn,
+	        e.order_name,
+			order_prop, 
+			weight, 
+			insure_amount, 
+			insure_value, 
+    		contact_city, 
+    		contact_code, 
+    		contact_corp, 
+    		contact_name, 
+    		contact_addr, 
+    		contact_mobile1, 
+    		contact_mobile2,
+    		post_name, 
+    		post_corp, 
+    		post_code, 
+    		post_mobile1, 
+    		post_mobile2, 
+    		post_addr, 
+    		extra_amount, 
+    		length, 
+    		wide, 
+    		height, 
+    		back_mail_id,
+    		order_count, 
+    		eva_time, 
+    		shipping_type, 
+    		replace_identity
+		from
+			pcs_ems_info e
+		left join
+			pcs_pay_order o
+		on
+			e.order_sn = o.order_sn
+		where
+			o.send_pay_date is not null and o.send_pay_date like #{date} || '%' <!-- and mail_state = 1 -->
+	</select>
+	
+	
+	<update id="updateEmsInfo" parameterType="com.siasun.pcsweb.beans.EmsInfo">
+		insert into
+			pcs_ems_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="mail_id != null">
+				mail_id,
+			</if>
+			<if test="order_sn != null">
+				order_sn,
+			</if>
+			<if test="order_name != null">
+				order_name,
+			</if>
+			<if test="order_prop != null">
+				order_prop,
+			</if>
+			<if test="weight != null">
+				weight,
+			</if>
+			<if test="insure_amount != null">
+				insure_amount,
+			</if>
+			<if test="insure_value != null">
+				insure_value,
+			</if>
+			<if test="contact_city != null">
+				contact_city,
+			</if>
+			<if test="contact_code != null">
+				contact_code,
+			</if>
+			<if test="contact_corp != null">
+				contact_corp,
+			</if>
+			<if test="contact_name != null">
+				contact_name,
+			</if>
+			<if test="contact_addr != null">
+				contact_addr,
+			</if>
+			<if test="contact_mobile1 != null">
+				contact_mobile1,
+			</if>
+			<if test="contact_mobile2 != null">
+				contact_mobile2,
+			</if>
+			<if test="post_name != null">
+				post_name,
+			</if>
+			<if test="post_corp != null">
+				post_corp,
+			</if>
+			<if test="post_code != null">
+				post_code,
+			</if>
+			<if test="post_mobile1 != null">
+				post_mobile1,
+			</if>
+			<if test="post_mobile2 != null">
+				post_mobile2,
+			</if>
+			<if test="post_addr != null">
+				post_addr,
+			</if>
+			<if test="extra_amount != null">
+				extra_amount,
+			</if>
+			<if test="length != null">
+				length,
+			</if>
+			<if test="wide != null">
+				wide,
+			</if>
+			<if test="height != null">
+				height,
+			</if>
+			<if test="back_mail_id != null">
+				back_mail_id,
+			</if>
+			<if test="order_count != null">
+				order_count,
+			</if>
+			<if test="eva_time != null">
+				eva_time,
+			</if>
+			<if test="shipping_type != null">
+				shipping_type,
+			</if>
+			<if test="replace_identity != null">
+				replace_identity,
+			</if>
+			create_time,
+			<if test="mail_state != null">
+				mail_state,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="mail_id != null">
+				#{mail_id},
+			</if>
+			<if test="order_sn != null">
+				#{order_sn},
+			</if>
+			<if test="order_name != null">
+				#{order_name},
+			</if>
+			<if test="order_prop != null">
+				#{order_prop},
+			</if>
+			<if test="weight != null">
+				#{weight},
+			</if>
+			<if test="insure_amount != null">
+				#{insure_amount},
+			</if>
+			<if test="insure_value != null">
+				#{insure_value},
+			</if>
+			<if test="contact_city != null">
+				#{contact_city},
+			</if>
+			<if test="contact_code != null">
+				#{contact_code},
+			</if>
+			<if test="contact_corp != null">
+				#{contact_corp},
+			</if>
+			<if test="contact_name != null">
+				#{contact_name},
+			</if>
+			<if test="contact_addr != null">
+				#{contact_addr},
+			</if>
+			<if test="contact_mobile1 != null">
+				#{contact_mobile1},
+			</if>
+			<if test="contact_mobile2 != null">
+				#{contact_mobile2},
+			</if>
+			<if test="post_name != null">
+				#{post_name},
+			</if>
+			<if test="post_corp != null">
+				#{post_corp},
+			</if>
+			<if test="post_code != null">
+				#{post_code},
+			</if>
+			<if test="post_mobile1 != null">
+				#{post_mobile1},
+			</if>
+			<if test="post_mobile2 != null">
+				#{post_mobile2},
+			</if>
+			<if test="post_addr != null">
+				#{post_addr},
+			</if>
+			<if test="extra_amount != null">
+				#{extra_amount},
+			</if>
+			<if test="length != null">
+				#{length},
+			</if>
+			<if test="wide != null">
+				#{wide},
+			</if>
+			<if test="height != null">
+				#{height},
+			</if>
+			<if test="back_mail_id != null">
+				#{back_mail_id},
+			</if>
+			<if test="order_count != null">
+				#{order_count},
+			</if>
+			<if test="eva_time != null">
+				#{eva_time},
+			</if>
+			<if test="shipping_type != null">
+				#{shipping_type},
+			</if>
+			<if test="replace_identity != null">
+				#{replace_identity},
+			</if>
+			localtimestamp,
+			<if test="mail_state != null">
+				<!-- #{mail_state}, -->
+				to_number(#{mail_state}, '99G999D9S'),
+			</if>
+		</trim>
+		on conflict (order_sn)
+		do update
+		<set >
+			<if test="mail_id != null">
+				mail_id = #{mail_id, jdbcType=VARCHAR}, 
+			</if>
+			<if test="order_sn != null">
+				order_sn = #{order_sn, jdbcType=VARCHAR}, 
+			</if>
+			<if test="order_name != null">
+				order_name = #{order_name, jdbcType=VARCHAR}, 
+			</if>
+			<if test="order_prop != null">
+				order_prop = #{order_prop, jdbcType=VARCHAR}, 
+			</if>
+			<if test="weight != null">
+				weight = #{weight, jdbcType=VARCHAR}, 
+			</if>
+			<if test="insure_amount != null">
+				insure_amount = #{insure_amount, jdbcType=VARCHAR}, 
+			</if>
+			<if test="insure_value != null">
+				insure_value = #{insure_value, jdbcType=VARCHAR}, 
+			</if>
+			<if test="contact_city != null">
+				contact_city = #{contact_city, jdbcType=VARCHAR}, 
+			</if>
+			<if test="contact_code != null">
+				contact_code = #{contact_code, jdbcType=VARCHAR}, 
+			</if>
+			<if test="contact_corp != null">
+				contact_corp = #{contact_corp, jdbcType=VARCHAR}, 
+			</if>
+			<if test="contact_name != null">
+				contact_name = #{contact_name, jdbcType=VARCHAR}, 
+			</if>
+			<if test="contact_addr != null">
+				contact_addr = #{contact_addr, jdbcType=VARCHAR}, 
+			</if>
+			<if test="contact_mobile1 != null">
+				contact_mobile1 = #{contact_mobile1, jdbcType=VARCHAR}, 
+			</if>
+			<if test="contact_mobile2 != null">
+				contact_mobile2 = #{contact_mobile2, jdbcType=VARCHAR}, 
+			</if>
+			<if test="post_name != null">
+				post_name = #{post_name, jdbcType=VARCHAR}, 
+			</if>
+			<if test="post_corp != null">
+				post_corp = #{post_corp, jdbcType=VARCHAR}, 
+			</if>
+			<if test="post_code != null">
+				post_code = #{post_code, jdbcType=VARCHAR}, 
+			</if>
+			<if test="post_mobile1 != null">
+				post_mobile1 = #{post_mobile1, jdbcType=VARCHAR}, 
+			</if>
+			<if test="post_mobile2 != null">
+				post_mobile2 = #{post_mobile2, jdbcType=VARCHAR}, 
+			</if>
+			<if test="post_addr != null">
+				post_addr = #{post_addr, jdbcType=VARCHAR}, 
+			</if>
+			<if test="extra_amount != null">
+				extra_amount = #{extra_amount, jdbcType=VARCHAR}, 
+			</if>
+			<if test="length != null">
+				length = #{length, jdbcType=VARCHAR}, 
+			</if>
+			<if test="wide != null">
+				wide = #{wide, jdbcType=VARCHAR}, 
+			</if>
+			<if test="height != null">
+				height = #{height, jdbcType=VARCHAR}, 
+			</if>
+			<if test="back_mail_id != null">
+				back_mail_id = #{back_mail_id, jdbcType=VARCHAR}, 
+			</if>
+			<if test="order_count != null">
+				order_count = #{order_count, jdbcType=VARCHAR}, 
+			</if>
+			<if test="eva_time != null">
+				eva_time = #{eva_time, jdbcType=VARCHAR}, 
+			</if>
+			<if test="shipping_type != null">
+				shipping_type = #{shipping_type, jdbcType=VARCHAR}, 
+			</if>
+			<if test="replace_identity != null">
+				replace_identity = #{replace_identity, jdbcType=VARCHAR}, 
+			</if>
+			update_time = localtimestamp,
+			<if test="mail_state != null">
+				mail_state = to_number(#{mail_state}, '99G999D9S')
+			</if>
+	    </set>  
+	</update>
+
+</mapper>

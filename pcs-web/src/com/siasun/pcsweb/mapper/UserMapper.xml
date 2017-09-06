@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.siasun.pcsweb.mapper.UserMapper">
+
+	<select id="getUser" resultType="com.siasun.pcsweb.beans.UserInfo" parameterType="map">
+		select
+			username, password, token, login_time as loginTime, role
+		from
+			pcs_user
+		<where>
+			<if test="username != null and username != ''">
+				and username = #{username}
+			</if>
+			<if test="password != null and password != ''">
+				and password = #{password}
+			</if>
+		</where>
+	</select>
+
+	<update id="updateToken" parameterType="com.siasun.pcsweb.beans.UserInfo">
+		UPDATE
+			pcs_user
+		SET
+			token = #{token},
+			login_time = localtimestamp
+		WHERE
+			username = #{username}
+	</update>
+
+	<select id="getToken" resultType="string" parameterType="string">
+		select
+			token
+		from
+			pcs_user t
+		where
+			t.username = #{username}
+	</select>
+</mapper>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.siasun.pcsweb.mapper.OrderMapper">
+
+    <resultMap id="resultMap" type="OrderInfo">
+		<result column="order_sn" property="order_sn" jdbcType="VARCHAR" />
+		<result column="acc_sn" property="acc_sn" jdbcType="VARCHAR" />
+		<result column="biz_id" property="biz_id" jdbcType="VARCHAR" />
+		<result column="order_name" property="order_name" jdbcType="VARCHAR" />
+		<result column="pay_discount_money" property="pay_discount_money" jdbcType="INTEGER" />
+		<result column="pay_money" property="pay_money" jdbcType="INTEGER" />
+		<result column="order_content" property="order_content" jdbcType="VARCHAR" />
+		<result column="order_contact" property="order_contact" jdbcType="VARCHAR" />
+		<result column="pay_time" property="pay_time" jdbcType="DECIMAL" />
+		<result column="pay_state" property="pay_state" jdbcType="VARCHAR" />
+		<result column="bank_code" property="bank_code" jdbcType="VARCHAR" />
+		<result column="bank_trade_sn" property="bank_trade_sn" jdbcType="VARCHAR" />
+		<result column="err_code" property="err_code" jdbcType="VARCHAR" />
+		<result column="err_desc" property="err_desc" jdbcType="VARCHAR" />
+		<result column="trans_flow_no" property="trans_flow_no" jdbcType="VARCHAR" />
+		<result column="trans_time" property="trans_time" jdbcType="VARCHAR" />
+		<result column="send_pay_date" property="send_pay_date" jdbcType="VARCHAR" />
+		<result column="tax_sn" property="tax_sn" jdbcType="VARCHAR" />
+		<result column="tax_code" property="tax_code" jdbcType="VARCHAR" />
+		<result column="tax_date" property="tax_date" jdbcType="VARCHAR" />
+		<result column="tax_type" property="tax_type" jdbcType="VARCHAR" />
+		<result column="buyer_logon_id" property="buyer_logon_id" jdbcType="VARCHAR" />
+		<result column="buyer_user_id" property="buyer_user_id" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<sql id="Base_Column_List" >
+    	order_sn, acc_sn, order_name, pay_money, pay_time, p.bank_name as bank_code, 
+    	bank_trade_sn, trans_flow_no, trans_time, send_pay_date, buyer_logon_id, buyer_user_id, f.display_field as pay_state
+    </sql>
+	
+	<select id="ListOrder" resultMap="resultMap" parameterType="map">
+		select
+			<include refid="Base_Column_List" />
+		from
+			pcs_pay_order t
+		left join 
+			pcs_bank_info p
+		on 
+			t.bank_code = p.bank_code
+		left join
+		(
+			select * from pcs_field
+			where field = 'payState'
+		) f
+		on 
+			t.pay_state = f.value_field
+		<where>
+			1 = 1
+			<if test="orderSn != null and orderSn != ''">
+				and t.order_sn like '%' || #{orderSn} || '%'
+			</if>
+			<if test="time1 != null and time1 != ''">
+				and t.pay_time >= #{time1}
+			</if>
+			<if test="time2 != null and time2 != ''">
+				<![CDATA[and t.pay_time <= #{time2}]]>
+			</if>
+		</where>
+		order by
+			t.pay_time desc
+	</select>
+	
+</mapper>
